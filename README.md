@@ -1,6 +1,6 @@
 <h1 style="font-size: 32px;"><b>Raspberry Pi Webcam Project with AWS Integration</b></h1>
 
-<p><i>Capture, Store, and Analyze Photos with Ease!</i></p>
+<p><i>Capture, Store, and Analyze Photos with Ease! 📸🔒🔍</i></p>
 
 <p>This repository contains the code and documentation for a <b style="font-size: 24px;">Raspberry Pi webcam project</b> with <b style="font-size: 24px;">AWS integration</b>. The project utilizes a USB webcam (specifically the <i>Mi USB Webcam HD</i>) connected to a Raspberry Pi to capture photos and seamlessly upload them to an <b style="font-size: 24px;">Amazon S3 bucket</b> for storage and further processing. It leverages the power of <b style="font-size: 24px;">AWS services</b> to enhance the functionality and scalability of the project.</p>
 
