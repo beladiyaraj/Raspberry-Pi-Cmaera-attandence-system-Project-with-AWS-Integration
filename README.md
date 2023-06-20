@@ -50,5 +50,3 @@
 
 <h2 style="font-size: 28px;"><b>Get Started Today!</b></h2>
 <p>Contribution, issue reporting, and suggestions for improvement are <b style="font-size: 24px;">highly appreciated</b>.</p>
-
-<p><b>GitHub Repository:</b> [your-repo-url]</p>
