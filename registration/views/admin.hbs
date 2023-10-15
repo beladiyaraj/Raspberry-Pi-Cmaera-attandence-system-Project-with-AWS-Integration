@@ -1,5 +1,4 @@
 <html>
-
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -35,11 +34,23 @@
   <body>
     <section id="welcomSection" class="sections">
       <span class="section1">
-        <div id="welcomeUsername">Welcome,
-          <u>
-            <h4 style="margin: 0;">{{useremail}}</h4>
-          </u>
-        </div>
+        <span id="flexSpan">
+          <div id="welcomeUsername">Welcome,
+            <u>
+              <h4 style="margin: 0;">{{useremail}}</h4>
+            </u>
+          </div>
+          <div id="deviceIds" class="associatedIDs">
+            Associated Device IDs:&nbsp;&nbsp;
+            <u>
+              <h3 style="margin: 0;">
+                {{#each deviceIDsParsed}}
+                  '{{this}}'
+                {{/each}}
+              </h3>
+            </u>
+          </div>
+        </span>
         <div class="navigationButtons">
           <div class="dashboardButton">
             <a href="/dashboard" class="btn btn-primary2">Dashboard</a>
@@ -49,16 +60,6 @@
           </div>
         </div>
       </span>
-      <div id="deviceIds" class="associatedIDs">
-        Associated Device IDs:&nbsp;&nbsp;
-        <u>
-          <h3 style="margin: 0;">
-            {{#each deviceIDsParsed}}
-              '{{this}}'
-            {{/each}}
-          </h3>
-        </u>
-      </div>
     </section>
     <section id="filterSection" class="sections">
       <h2>Filter Transactions:</h2>

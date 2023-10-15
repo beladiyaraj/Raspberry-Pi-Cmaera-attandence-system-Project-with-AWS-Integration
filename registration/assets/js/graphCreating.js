@@ -346,3 +346,4 @@ function createChart(labels, data, xAxisLable) {
 function isNumber(value) {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
+

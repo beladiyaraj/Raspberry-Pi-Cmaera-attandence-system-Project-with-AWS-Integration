@@ -34,7 +34,31 @@
   </head>
   <body>
     <section id="dashboardSection" class="sections">
-      <h2>Dashboard</h2>
+      <div class="dashboardSection1">
+        <h2>Dashboard</h2>
+        <section id="welcomSection">
+          <div id="deviceIds" class="associatedIDs">
+            Associated Device IDs:&nbsp;&nbsp;
+            <u>
+              <h3 style="margin: 0;">
+                {{#each deviceIDsParsed}}
+                  '{{this}}'
+                {{/each}}
+              </h3>
+            </u>
+          </div>
+          <div id="locatinIds" class="associatedIDs">
+            Associated Location IDs:&nbsp;&nbsp;
+            <u>
+              <h3 style="margin: 0;">
+                {{#each locationIDsParsed}}
+                  '{{this}}'
+                {{/each}}
+              </h3>
+            </u>
+          </div>
+        </section>
+      </div>
       <div class="navigationButtons">
         <div class="back-button">
           <a href="/admin" class="btn btn-primary1">Back to Admin</a>
@@ -44,31 +68,8 @@
         </div>
       </div>
     </section>
-    <section id="welcomSection" class="sections">
-      <div id="deviceIds" class="associatedIDs">
-        Associated Device IDs:&nbsp;&nbsp;
-        <u>
-          <h3 style="margin: 0;">
-            {{#each deviceIDsParsed}}
-              '{{this}}'
-            {{/each}}
-          </h3>
-        </u>
-      </div>
-      <div id="locatinIds" class="associatedIDs">
-        Associated Location IDs:&nbsp;&nbsp;
-        <u>
-          <h3 style="margin: 0;">
-            {{#each locationIDsParsed}}
-              '{{this}}'
-            {{/each}}
-          </h3>
-        </u>
-      </div>
-    </section>
     <!-- Add filters section with IDs and class names -->
     <section id="filtersSection" class="sections">
-      <h2>Filters</h2>
       <form id="filterForm" method="post">
         <div class="input-box filter-group">
           <label class="input-label" for="Date">Location ID:</label>
@@ -125,8 +126,14 @@
         </span>
       </form>
     </section>
-    <section id="chartSection" class="sections">
-      <canvas id="myChart" style="color: black;"></canvas>
-    </section>
+    <span id="justSpan">
+      <section id="chartSection" class="sections">
+        <canvas id="myChart"></canvas>
+      </section>
+    </span>
+    <script>
+      $(document).ready(function () { $("#chartSection").css("width",
+      "65.625rem"); });
+    </script>
   </body>
 </html>

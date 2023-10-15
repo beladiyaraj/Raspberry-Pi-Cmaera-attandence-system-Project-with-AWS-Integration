@@ -52,6 +52,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 15px;
 }
 
 #welcomeUsername {
@@ -59,7 +60,12 @@ body {
   flex-direction: row;
   align-items: center;
   font-size: 20px;
-  margin-bottom: 15px;
+}
+
+#flexSpan {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 .associatedIDs {
@@ -67,16 +73,16 @@ body {
   flex-direction: row;
   align-items: center;
   font-size: 20px;
-  margin-bottom: 15px;
+  margin-left: 15px;
 }
 
-.navigationButtons{
+.navigationButtons {
   display: flex;
   flex-direction: row;
 }
 
-.dashboardButton{
-  padding-right: 10px ;
+.dashboardButton {
+  padding-right: 10px;
 }
 
 .close {
@@ -85,7 +91,7 @@ body {
 }
 
 #filterSection {
-  padding: 30px;
+  padding: 20px;
   background-color: rgba(79, 195, 161, 0.7);
   border: 1px solid #324960;
   border-radius: 10px;
@@ -95,7 +101,8 @@ body {
 #filterForm {
   display: grid;
   grid-gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin: 0px;
 }
 
 #filterForm button {
@@ -211,7 +218,7 @@ input {
   transition: 250ms;
 }
 
-.btn-primary2:hover{
+.btn-primary2:hover {
   color: white;
   background-color: #324960;
 }
@@ -227,10 +234,6 @@ input {
   background: rgb(137, 232, 204);
 }
 
-.filter-group {
-  margin-bottom: 20px;
-}
-
 #submitButtonStyle {
   display: flex;
   align-items: center;
@@ -239,8 +242,11 @@ input {
 
 .sections h2 {
   font-size: 24px;
-  margin-bottom: 20px;
   color: #202124;
+}
+
+#filterSection h2 {
+  margin-bottom: 0px;
 }
 
 #transactionsSection {
