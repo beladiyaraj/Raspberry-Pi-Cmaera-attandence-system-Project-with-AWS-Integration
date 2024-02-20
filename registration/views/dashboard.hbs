@@ -36,28 +36,6 @@
     <section id="dashboardSection" class="sections">
       <div class="dashboardSection1">
         <h2>Dashboard</h2>
-        <section id="welcomSection">
-          <div id="deviceIds" class="associatedIDs">
-            Associated Device IDs:&nbsp;&nbsp;
-            <u>
-              <h3 style="margin: 0;">
-                {{#each deviceIDsParsed}}
-                  '{{this}}'
-                {{/each}}
-              </h3>
-            </u>
-          </div>
-          <div id="locatinIds" class="associatedIDs">
-            Associated Location IDs:&nbsp;&nbsp;
-            <u>
-              <h3 style="margin: 0;">
-                {{#each locationIDsParsed}}
-                  '{{this}}'
-                {{/each}}
-              </h3>
-            </u>
-          </div>
-        </section>
       </div>
       <div class="navigationButtons">
         <div class="back-button">
@@ -72,28 +50,17 @@
     <section id="filtersSection" class="sections">
       <form id="filterForm" method="post">
         <div class="input-box filter-group">
-          <label class="input-label" for="Date">Location ID:</label>
-          <input
-            type="text"
-            id="location_id"
-            name="location_id"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
+          <label class="input-label" for="project_name"></label>
+          <select id="project_name" class="input-1">
+            <option value="select">Project Name</option>
+          </select>
         </div>
         <div class="input-box filter-group">
-          <label class="input-label" for="Device_ID">Device ID:</label>
-          <input
-            type="text"
-            id="device_id"
-            name="device_id"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
+          <label class="input-label" for="building_name"></label>
+          <select id="building_name" class="input-1">
+            <option value="select">Building Name</option>
+          </select>
         </div>
-
         <div class="input-box filter-group">
           <label class="input-label" for="year">Year:</label>
           <input
@@ -105,7 +72,6 @@
             onblur="setFocus(false)"
           />
         </div>
-
         <div class="input-box filter-group">
           <label class="input-label" for="month">Month:</label>
           <input
@@ -117,23 +83,30 @@
             onblur="setFocus(false)"
           />
         </div>
-
         <span class="submitButtonStyle">
           <div class="filter-group">
             <button id="applyFiltersButton" class="btn btn-primary1">Apply
               Filters</button>
           </div>
         </span>
+        <div class="filter-group">
+          <button type="button" id="clearAll" class="btn btn-primary1">Clear All</button>
+        </div>
       </form>
     </section>
     <span id="justSpan">
       <section id="chartSection" class="sections">
+        <div id="message" style="color: red; font-weight: bold;"></div>
         <canvas id="myChart"></canvas>
       </section>
     </span>
     <script>
-      $(document).ready(function () { $("#chartSection").css("width",
-      "65.625rem"); });
+      $(document).ready(function () { $("#chartSection").css("width", "55rem");
+      }); document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("clearAll").addEventListener("click", function() {
+      const form = document.getElementById("filterForm"); for (const element of
+      form.elements) { if (element.type !== "button" && element.type !==
+      "submit") { element.value = ""; } } }); });
     </script>
   </body>
 </html>

@@ -34,7 +34,7 @@
 #filterForm {
   display: grid;
   grid-gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   margin: 0px;
 }
 
@@ -94,7 +94,6 @@
   height: 50px;
   width: 100%;
   border-radius: 4px;
-  color: #202124;
   border: 1px solid #324960;
   padding: 13px 15px;
   transition: 250ms;
@@ -178,7 +177,6 @@
 }
 
 #myChart {
-  padding: 30px;
   align-items: center;
   justify-content: center;
   display: flex;

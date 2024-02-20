@@ -6,7 +6,7 @@
 
     <link href="images/gatexFavicon.png" rel="icon" />
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"
     ></script>
@@ -23,6 +23,7 @@
 
     <script src="/js/filter.js"></script>
     <script src="/js/filterCSS.js"></script>
+    <script src="/js/scrollToModel.js"></script>
 
     <style>
       @import
@@ -34,23 +35,11 @@
   <body>
     <section id="welcomSection" class="sections">
       <span class="section1">
-        <span id="flexSpan">
-          <div id="welcomeUsername">Welcome,
-            <u>
-              <h4 style="margin: 0;">{{useremail}}</h4>
-            </u>
-          </div>
-          <div id="deviceIds" class="associatedIDs">
-            Associated Device IDs:&nbsp;&nbsp;
-            <u>
-              <h3 style="margin: 0;">
-                {{#each deviceIDsParsed}}
-                  '{{this}}'
-                {{/each}}
-              </h3>
-            </u>
-          </div>
-        </span>
+        <div id="welcomeUsername">Welcome,
+          <u>
+            <h4 style="margin: 0;">{{useremail}}</h4>
+          </u>
+        </div>
         <div class="navigationButtons">
           <div class="dashboardButton">
             <a href="/dashboard" class="btn btn-primary2">Dashboard</a>
@@ -62,23 +51,76 @@
       </span>
     </section>
     <section id="filterSection" class="sections">
-      <h2>Filter Transactions:</h2>
+      <h2>Filter Gate Entry Transactions:</h2>
       <form id="filterForm">
-
         <div class="input-box filter-group">
-          <label class="input-label" for="Device_ID">Device ID:</label>
-          <input
+          <label class="input-label" for="project_name"></label>
+          <select
             type="text"
-            id="Device_ID"
-            name="Device_ID"
+            id="project_name"
+            name="project_name"
             class="input-1"
             onfocus="setFocus(true)"
             onblur="setFocus(false)"
-          />
+          >
+            <option value="select">Project Name</option>
+            {{#each transData}}
+              <option
+                value="{{this.project_name}}"
+              >{{this.project_name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="input-box filter-group">
+          <label class="input-label" for="building_name"></label>
+          <select
+            id="building_name"
+            name="building_name"
+            class="input-1"
+            onfocus="setFocus(true)"
+            onblur="setFocus(false)"
+          >
+            <option value="select">Building Name</option>
+            {{#each transData}}
+              <option
+                value="{{this.building_name}}"
+              >{{this.building_name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="input-box filter-group">
+          <label class="input-label" for="gate_no"></label>
+          <select
+            id="gate_no"
+            name="gate_no"
+            class="input-1"
+            onfocus="setFocus(true)"
+            onblur="setFocus(false)"
+          >
+            <option value="select">Gate No</option>
+            {{#each transData}}
+              <option value="{{this.gate_no}}">{{this.gate_no}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="input-box filter-group">
+          <label class="input-label" for="gate_name"></label>
+          <select
+            id="gate_name"
+            name="gate_name"
+            class="input-1"
+            onfocus="setFocus(true)"
+            onblur="setFocus(false)"
+          >
+            <option value="select">Gate Name</option>
+            {{#each transData}}
+              <option value="{{this.gate_name}}">{{this.gate_name}}</option>
+            {{/each}}
+          </select>
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Batch_ID">Batch ID:</label>
+          <label class="input-label" for="Batch_ID">Batch ID</label>
           <input
             type="text"
             id="Batch_ID"
@@ -90,7 +132,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Year">Year:</label>
+          <label class="input-label" for="Year">Year</label>
           <input
             type="text"
             id="Year"
@@ -102,7 +144,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Month">Month:</label>
+          <label class="input-label" for="Month">Month</label>
           <input
             type="text"
             id="Month"
@@ -114,7 +156,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Date">Date:</label>
+          <label class="input-label" for="Date">Date</label>
           <input
             type="text"
             id="Date"
@@ -126,7 +168,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Day">Day:</label>
+          <label class="input-label" for="Day">Day</label>
           <input
             type="text"
             id="Day"
@@ -138,7 +180,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Hours">Hours:</label>
+          <label class="input-label" for="Hours">Hours</label>
           <input
             type="text"
             id="Hours"
@@ -150,7 +192,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Minutes">Minutes:</label>
+          <label class="input-label" for="Minutes">Minutes</label>
           <input
             type="text"
             id="Minutes"
@@ -162,7 +204,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Seconds">Seconds:</label>
+          <label class="input-label" for="Seconds">Seconds</label>
           <input
             type="text"
             id="Seconds"
@@ -174,7 +216,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Visitor_Details">Visitor Details:</label>
+          <label class="input-label" for="Visitor_Details">Visitor Details</label>
           <input
             type="text"
             id="Visitor_Details"
@@ -186,7 +228,7 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Vehicle_No">Vehicle No:</label>
+          <label class="input-label" for="Vehicle_No">Vehicle No</label>
           <input
             type="text"
             id="Vehicle_No"
@@ -201,15 +243,21 @@
             <button type="submit" class="btn btn-primary1">Filter</button>
           </div>
         </span>
+        <div id="submitButtonStyle" class="filter-group">
+          <button type="button" id="clearAll" class="btn btn-primary1">Clear All</button>
+        </div>
       </form>
     </section>
-
     <section id="transactionsSection" class="sections">
-      <h2 id="tableName">Transactions:</h2>
+      <h2 id="tableName">Gate Entry Transactions:</h2>
       <div class="table-wrapper">
         <table class="fl-table" border="1" id="transactionsTable">
           <thead>
             <tr>
+              <th>Project Name</th>
+              <th>Building Name</th>
+              <th>Gate No</th>
+              <th>Gate Name</th>
               <th>Device ID</th>
               <th>Batch ID</th>
               <th>Year</th>
@@ -219,19 +267,18 @@
               <th>Hours</th>
               <th>Minutes</th>
               <th>Seconds</th>
-              <th>Visitor Details</th>
+              <th id="visitor_details_column">Visitor Details</th>
               <th>Vehicle No</th>
               <th>Visitor Image</th>
-              <th>Extra 1</th>
-              <th>Extra 2</th>
-              <th>Extra 3</th>
-              <th>Extra 4</th>
-              <th>Extra 5</th>
             </tr>
           </thead>
           <tbody>
             {{#each transData}}
               <tr>
+                <td>{{this.project_name}}</td>
+                <td>{{this.building_name}}</td>
+                <td>{{this.gate_no}}</td>
+                <td>{{this.gate_name}}</td>
                 <td>{{this.Device_ID}}</td>
                 <td>{{this.batch_id}}</td>
                 <td>{{this.year}}</td>
@@ -303,11 +350,6 @@
                     No Image
                   {{/if}}
                 </td>
-                <td>{{this.extra_1}}</td>
-                <td>{{this.extra_2}}</td>
-                <td>{{this.extra_3}}</td>
-                <td>{{this.extra_4}}</td>
-                <td>{{this.extra_5}}</td>
               </tr>
             {{/each}}
           </tbody>
@@ -335,32 +377,26 @@
               <th>Building Name</th>
               <th>Gate No</th>
               <th>Gate Name</th>
-              <th>Extra 1</th>
-              <th>Extra 2</th>
-              <th>Extra 3</th>
-              <th>Extra 4</th>
             </tr>
           </thead>
           <tbody>
             {{#if location}}
-              <tr>
-                <td>{{location.customer_ID}}</td>
-                <td>{{deviceIDsParsed}}</td>
-                <td>{{locationIDsParsed}}</td>
-                <td>{{location.country}}</td>
-                <td>{{location.state}}</td>
-                <td>{{location.district}}</td>
-                <td>{{location.city}}</td>
-                <td>{{location.site}}</td>
-                <td>{{location.project_name}}</td>
-                <td>{{location.building_name}}</td>
-                <td>{{location.gate_no}}</td>
-                <td>{{location.gate_name}}</td>
-                <td>{{location.extra_1}}</td>
-                <td>{{location.extra_2}}</td>
-                <td>{{location.extra_3}}</td>
-                <td>{{location.extra_4}}</td>
-              </tr>
+              {{#each location}}
+                <tr>
+                  <td>{{this.customer_ID}}</td>
+                  <td>{{this.device_id}}</td>
+                  <td>{{this.location_ID}}</td>
+                  <td>{{this.country}}</td>
+                  <td>{{this.state}}</td>
+                  <td>{{this.district}}</td>
+                  <td>{{this.city}}</td>
+                  <td>{{this.site}}</td>
+                  <td>{{this.project_name}}</td>
+                  <td>{{this.building_name}}</td>
+                  <td>{{this.gate_no}}</td>
+                  <td>{{this.gate_name}}</td>
+                </tr>
+              {{/each}}
             {{else}}
               <tr>
                 <td colspan="16">No Location Data Found</td>
@@ -370,5 +406,8 @@
         </table>
       </div>
     </section>
+    {{!-- <script>
+
+    </script> --}}
   </body>
 </html>

@@ -101,7 +101,7 @@ body {
 #filterForm {
   display: grid;
   grid-gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   margin: 0px;
 }
 
@@ -137,6 +137,7 @@ input {
 }
 
 .input-box .input-label {
+  color: rgb(173, 173, 173);
   position: absolute;
   font-size: 16px;
   font-weight: 400;
@@ -160,12 +161,16 @@ input {
   transition: 250ms;
 }
 
+option{
+  color: #000;
+}
+
 .input-box .input-1 {
   box-sizing: border-box;
   height: 50px;
   width: 100%;
   border-radius: 4px;
-  color: #202124;
+  color: rgb(173, 173, 173);
   border: 1px solid #324960;
   padding: 13px 15px;
   transition: 250ms;
@@ -307,6 +312,17 @@ input {
 .fl-table th {
   text-align: center;
   padding: 8px;
+  height: 75px;
+}
+
+.visitor_details {
+  display: block;
+  border: 0px;
+  overflow-y: auto;
+}
+
+.fl-table tr {
+  height: 75px;
 }
 
 .fl-table td {
@@ -439,4 +455,8 @@ input {
   -webkit-backdrop-filter: blur(4.4px);
   border: 1px solid rgba(79, 195, 161, 0.67);
   width: 100%;
+}
+
+#visitor_details_column {
+  min-width: 200px;
 }

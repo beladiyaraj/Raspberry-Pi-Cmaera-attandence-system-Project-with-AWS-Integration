@@ -1,0 +1,78 @@
+:root {
+  --background-color: rgba(79, 195, 161, 0.7);
+  --font-color: #000;
+}
+
+#header {
+  padding: 40px 0px 0px 40px;
+}
+
+.wrap{
+    border-radius: 15px;
+    margin: 0px;
+    padding: 0px;
+    overflow:visible;
+}
+
+#emailForm,
+#customerForm {
+  padding: 0px 40px;
+}
+
+#emailForm{
+    padding-top: 15px;
+    padding-bottom: 5px;
+    background-color: var(--background-color);
+    border-radius: 15px 15px 15px 15px;
+    margin: 0px;
+}
+
+#customerForm{
+    padding-bottom: 5px;
+    display: grid;
+}
+
+#verifyemail{
+    background: #324960 !important ;
+    border: none !important;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Create 2 columns */
+  gap: 20px; /* Adds some space between the fields */
+}
+
+.fade-in {
+  animation: fadeIn ease 0.5s;
+  -webkit-animation: fadeIn ease 0.5s;
+  -moz-animation: fadeIn ease 0.5s;
+  -o-animation: fadeIn ease 0.5s;
+  -ms-animation: fadeIn ease 0.5s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.fade-out {
+  animation: fadeOut ease 0.5s;
+  -webkit-animation: fadeOut ease 0.5s;
+  -moz-animation: fadeOut ease 0.5s;
+  -o-animation: fadeOut ease 0.5s;
+  -ms-animation: fadeOut ease 0.5s;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

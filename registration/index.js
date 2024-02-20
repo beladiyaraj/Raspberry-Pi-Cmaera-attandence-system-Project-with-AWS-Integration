@@ -70,6 +70,20 @@ app.get("/admin", ensureAuthenticated, async (req, res) => {
     if (!data.userdata) {
       return res.send(alertRedirect("No userData found with the email", "/"));
     }
+    for (let i = 0; i < data.transData.length; i++) {
+      for (let j = 0; j < data.location.length; j++) {
+        if (
+          data.transData[i].Device_ID == JSON.parse(data.location[j].device_id)
+        ) {
+          data.transData[i].project_name = data.location[j].project_name;
+          data.transData[i].building_name = data.location[j].building_name;
+          data.transData[i].gate_no = data.location[j].gate_no;
+          data.transData[i].gate_name = data.location[j].gate_name;
+        }
+      }
+    }
+    // console.log(data)
+    // console.log(data.transData)
     res.render("admin", data);
   } catch (error) {
     console.error("Error:", error);
@@ -92,15 +106,7 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
     if (!req.session.user) {
       return res.redirect("/");
     }
-
-    const user = req.session.user;
-    const userDataResults = await getAdminData(user);
-
-    if (!userDataResults.userdata) {
-      return res.send(alertRedirect("No userData found with the email", "/"));
-    }
-
-    res.render("dashboard", userDataResults);
+    res.render("dashboard");
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send("Internal Server Error");
@@ -116,8 +122,48 @@ app.get("/forgotpassword", async (req, res) => {
   }
 });
 
+app.get("/entercustomer", async (req, res) => {
+  try {
+    res.render("enterCustomer");
+  } catch (error) {
+    res.send("Page not found");
+    console.error("Error:", error);
+  }
+});
+
+app.post("/adminPasswordCheck", (req, res) => {
+  const adminPassword = req.body.adminPassword;
+  if (adminPassword === "gatex600") {
+    res.json({ status: "success" });
+  } else {
+    res.json({ status: "fail" });
+  }
+});
+
+app.get("/checkadminemail", async (req, res) => {
+  try {
+    const email = req.query.email; // Get the admin email from the query parameters
+    const password = req.query.password; // Get the password from the query parameters
+
+    // Replace the following conditions with your own logic
+    const correctEmail = "rahultanwar@gmail.com";
+    const correctPassword = "gatex600";
+
+    if (email === correctEmail && password === correctPassword) {
+      res.status(200).json(true);
+    } else if (email !== correctEmail) {
+      res.status(400).json(false); // Return 400 for incorrect email
+    } else if (password !== correctPassword) {
+      res.status(500).json(false); // Return 500 for incorrect password
+    }
+  } catch (error) {
+    res.status(404).send("Page not found");
+    console.error("Error:", error);
+  }
+});
+
 app.get("/checkemail", async (req, res) => {
-  const email = req.query.email; // Get the email from the query parameters
+  const email = req.query.email;
   try {
     const user = await getUserFromDB(email);
     if (!user) {
@@ -155,6 +201,67 @@ app.post("/resetpassword", async (req, res) => {
   }
 });
 
+app.post("/addCustomer", async (req, res) => {
+  try {
+    const {
+      customerId,
+      customerLogin,
+      customerPassword,
+      deviceId,
+      customerName,
+      customerType,
+      customerAddress,
+      contactPersonName,
+      contactPersonEmailID,
+      contactPersonPhone,
+    } = req.body;
+
+    // Check if the customer ID already exists in the customer_master table
+    const checkQuery = "SELECT * FROM customer_master WHERE customer_id = ?";
+    db.query(checkQuery, [customerId], (err, results) => {
+      if (err) throw err;
+
+      if (results.length > 0) {
+        // Customer ID already exists
+        return res.status(400).json({
+          status: "customeralreadyexist",
+          message: `Customer with customer-id:${customerId} is already present`,
+        });
+      }
+
+      // Add new customer to customer_master table
+      const insertQuery =
+        "INSERT INTO customer_master (customer_id, customer_login, customer_password, device_id, customer_name, customer_type, customer_address, contact_person_name, contact_person_emailID, contact_person_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      const values = [
+        customerId,
+        customerLogin,
+        customerPassword,
+        deviceId,
+        customerName,
+        customerType,
+        customerAddress,
+        contactPersonName,
+        contactPersonEmailID,
+        contactPersonPhone,
+      ];
+      db.query(insertQuery, values, (err, results) => {
+        if (err) throw err;
+
+        res.status(200).json({
+          status: "success",
+          message: "Customer added successfully",
+        });
+      });
+    });
+  } catch (error) {
+    console.error("An error occurred:", error);
+    res.status(500).json({
+      status: "error",
+      message: "An error occurred while processing your request",
+    });
+  }
+});
+
 const server = app.listen(2000, "0.0.0.0", () => {
   console.log("listening to server on http://localhost:2000");
 });
@@ -182,7 +289,7 @@ async function getUserFromDB(email) {
   });
 }
 
-async function getAdminData(useremail) {
+async function getAdminData(useremail) { 
   return new Promise((resolve, reject) => {
     try {
       const sql = "SELECT * FROM customer_master WHERE customer_login = ?";
@@ -242,7 +349,7 @@ async function getLocationData(customerId) {
     db.query(sqlLocation, [customerId], (err, results) => {
       if (err) return reject(err);
 
-      const locationData = results[0]; // assuming each customer_id has only one associated location data
+      const locationData = results; // Now locationData is an array of results
 
       resolve(locationData);
     });
@@ -278,6 +385,7 @@ function ensureAuthenticated(req, res, next) {
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
     return res.redirect("/");
   }
+  return next();
 }
 
 async function verifyCurrentPassword(email, currentPassword) {

@@ -1,14 +1,71 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const dropdownIds = ["project_name", "building_name"];
+  const textInputIds = ["year", "month"];
+
+  // Dropdowns
+  dropdownIds.forEach((id) => {
+    let selectElement = document.getElementById(id);
+    let seen = {};
+
+    if (selectElement) {
+      selectElement.style.color = "rgb(173, 173, 173)";
+      selectElement.style.cssText = null; // Remove any inline styles
+
+      selectElement.addEventListener("change", function () {
+        this.style.color = this.value ? "black" : "rgb(173, 173, 173)";
+      });
+
+      // Remove duplicate options
+      Array.from(selectElement.options).forEach((option) => {
+        if (seen[option.value]) {
+          selectElement.removeChild(option);
+        } else {
+          seen[option.value] = true;
+        }
+      });
+
+      // Trigger change event on load
+      selectElement.dispatchEvent(new Event("change"));
+    }
+  });
+
+  // Text inputs
+  textInputIds.forEach((id) => {
+    let inputElement = document.getElementById(id);
+
+    if (inputElement) {
+      inputElement.style.color = "rgb(173, 173, 173)";
+
+      inputElement.addEventListener("input", function () {
+        this.style.color = this.value ? "black" : "rgb(173, 173, 173)";
+      });
+
+      // Trigger input event on load
+      inputElement.dispatchEvent(new Event("input"));
+    }
+  });
+
+  ["project_name", "building_name"].forEach((id) => {
+    var element = document.getElementById(id);
+    element.style.cssText = null; // This will remove the 'style' attribute
+  });
+
   fetchUserData();
+
   try {
-    const submitButton = document.getElementById("applyFiltersButton"); // Replace 'submitButton' with the actual ID of your submit button
-    submitButton.addEventListener("click", handleSubmit);
+    const submitButton = document.getElementById("applyFiltersButton");
+    if (submitButton) {
+      submitButton.addEventListener("click", handleSubmit);
+    } else {
+      console.log("Submit button not found");
+    }
   } catch (error) {
     console.error("Error in main:", error);
   }
 });
 
 let userDataPromise = null;
+
 async function fetchUserData() {
   if (!userDataPromise) {
     userDataPromise = new Promise(async (resolve, reject) => {
@@ -18,6 +75,7 @@ async function fetchUserData() {
           throw new Error("Fetch failed with status " + response.status);
         }
         const data = await response.json();
+        populateDropdowns(data.transData);
         resolve(data);
       } catch (error) {
         reject(error);
@@ -27,323 +85,246 @@ async function fetchUserData() {
   return userDataPromise;
 }
 
-async function handleSubmit(event) {
-  event.preventDefault(); // Prevent the default form submission behavior
+function populateDropdowns(transData) {
+  const projectSelect = document.getElementById("project_name");
+  const buildingSelect = document.getElementById("building_name");
 
+  const currentSelections = {
+    project_name: projectSelect.value,
+    building_name: buildingSelect.value,
+  };
+
+  const projectNames = new Set(["Project Name"]);
+  const buildingNames = new Set(["Building Name"]);
+
+  transData.forEach((item) => {
+    projectNames.add(item.project_name);
+    buildingNames.add(item.building_name);
+  });
+
+  updateDropdown(projectSelect, projectNames);
+  updateDropdown(buildingSelect, buildingNames);
+
+  projectSelect.value = currentSelections.project_name;
+  buildingSelect.value = currentSelections.building_name;
+}
+
+function updateDropdown(selectElement, optionsSet) {
+  // Clear existing options
+  selectElement.innerHTML = "";
+
+  // Add default option
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "select";
+  defaultOption.textContent =
+    selectElement.id === "project_name" ? "Project Name" : "Building Name";
+  defaultOption.selected = true; // Set default option as selected
+  selectElement.appendChild(defaultOption);
+
+  // Add new options from optionsSet, excluding the default options
+  optionsSet.forEach((optionValue) => {
+    if (optionValue !== "Project Name" && optionValue !== "Building Name") {
+      const optionElement = document.createElement("option");
+      optionElement.value = optionValue;
+      optionElement.textContent = optionValue;
+      selectElement.appendChild(optionElement);
+    }
+  });
+}
+
+async function handleSubmit(event) {
+  event.preventDefault();
   try {
-    // Get form data using FormData
-    const formData = new FormData(document.getElementById("filterForm")); // Replace 'yourFormId' with the actual ID of your form element
+    const formData = new FormData(document.getElementById("filterForm"));
     let filterData = Object.fromEntries(formData);
+    userDataPromise = null; // Reset userDataPromise
     dataProcessing(filterData);
   } catch (error) {
     console.error("Error submitting form:", error);
   }
 }
 
+let myChart = null; // Single instance of the chart
+
 async function dataProcessing(filterData) {
   try {
-    const userData = await fetchUserData(); // Fetch user data once
-    // Create an array to store the names of empty fields
-    const emptyFields = [];
+    const userData = await fetchUserData();
+    let transData = [...userData.transData];
 
-    // Iterate through the properties of filterData
-    for (const key in filterData) {
-      if (filterData.hasOwnProperty(key)) {
-        const value = filterData[key];
-        if (!value) {
-          emptyFields.push(key);
+    // Initialize sets to collect unique years and months in the dataset.
+    let uniqueYears = new Set();
+    let uniqueMonths = new Set();
+
+    // Populate the uniqueYears and uniqueMonths sets.
+    for (let item of transData) {
+      if (item.year) {
+        uniqueYears.add(item.year.toString()); // Convert to string to ensure consistency
+      }
+      if (filterData.year) {
+        if (item.year == filterData.year && item.month) {
+          uniqueMonths.add(item.month.toString()); // Convert to string to ensure consistency
         }
       }
     }
 
-    if (Object.values(filterData).every((value) => !value)) {
-      alert("Please enter any values for filtering");
+    if (filterData.year && !uniqueYears.has(filterData.year)) {
+      document.getElementById("message").innerText =
+        "No data available for the selected year.";
+      if (myChart) {
+        myChart.destroy();
+        myChart = null;
+      }
+      return;
+    }
+
+    // If a month is selected, check if it exists within the selected year in the dataset.
+    if (filterData.month && !uniqueMonths.has(filterData.month)) {
+      document.getElementById("message").innerText =
+        "No data available for the selected month.";
+      if (myChart) {
+        myChart.destroy();
+        myChart = null;
+      }
+      return;
+    }
+
+    // Filtering logic
+    let filteredData = transData.filter(
+      (item) =>
+        (!filterData.project_name ||
+          item.project_name == filterData.project_name) &&
+        (!filterData.building_name ||
+          item.building_name == filterData.building_name) &&
+        (!filterData.year || item.year == filterData.year) &&
+        (!filterData.month || item.month == filterData.month)
+    );
+
+    if (filteredData.length === 0) {
+      document.getElementById("message").innerText =
+        "No data available for the selected month.";
+      if (myChart) {
+        myChart.destroy();
+        myChart = null;
+      }
+    }
+    document.getElementById("message").innerText = "";
+
+    let labels = [];
+    let dataCounts = {};
+
+    if (!filterData.year) {
+      // Handling years if none is selected
+      const years = filteredData.map((item) => item.year);
+      const minYear = Math.min(...years);
+      const maxYear = Math.max(...years);
+      labels = Array.from(
+        { length: maxYear - minYear + 5 }, // Adjust length to add 2 years on each side
+        (_, i) => i + minYear - 2 // Start from 2 years before minYear
+      );
+      dataCounts = labels.reduce((acc, year) => {
+        acc[year] = 0;
+        return acc;
+      }, {});
+      filteredData.forEach((item) => {
+        if (dataCounts.hasOwnProperty(item.year)) {
+          dataCounts[item.year] += 1;
+        }
+      });
+    } else if (filterData.year && !filterData.month) {
+      // Handle months
+      labels = Array.from({ length: 12 }, (_, i) => i + 1);
+      dataCounts = labels.reduce((acc, month) => {
+        acc[month] = 0;
+        return acc;
+      }, {});
+      filteredData.forEach((item) => {
+        if (dataCounts.hasOwnProperty(item.month)) {
+          dataCounts[item.month] += 1;
+        }
+      });
     } else {
-      if (emptyFields.length > 0) {
-        if (
-          emptyFields.includes("location_id") ||
-          emptyFields.includes("device_id")
-        ) {
-          const defaultLocationId = userData.locationIDsParsed[0];
-          const defaultDeviceId = userData.deviceIDsParsed[0];
-          // Check if "location_id" is not empty and validate it
-          if (!emptyFields.includes("location_id")) {
-            const locationId = filterData.location_id;
-            if (!userData.locationIDsParsed.includes(locationId)) {
-              alert("Invalid location_id. Please select a valid location.");
-              return; // Exit the function to prevent further processing
-            }
-          }
-
-          // Check if "device_id" is not empty and validate it
-          if (!emptyFields.includes("device_id")) {
-            const deviceId = filterData.device_id;
-            if (!userData.deviceIDsParsed.includes(deviceId)) {
-              alert("Invalid device_id. Please select a valid device.");
-              return; // Exit the function to prevent further processing
-            }
-          }
-          filterData.location_id = defaultLocationId;
-          filterData.device_id = defaultDeviceId;
-        } else {
-          if (!emptyFields.includes("location_id")) {
-            const locationId = filterData.location_id;
-            if (!userData.locationIDsParsed.includes(locationId)) {
-              alert("Invalid location_id. Please select a valid location.");
-              return; // Exit the function to prevent further processing
-            }
-          }
-
-          // Check if "device_id" is not empty and validate it
-          if (!emptyFields.includes("device_id")) {
-            const deviceId = filterData.device_id;
-            if (!userData.deviceIDsParsed.includes(deviceId)) {
-              alert("Invalid device_id. Please select a valid device.");
-              return; // Exit the function to prevent further processing
-            }
-          }
+      // Handle dates
+      const daysInMonth = (year, month) => new Date(year, month, 0).getDate();
+      let year = parseInt(filterData.year, 10);
+      let month = parseInt(filterData.month, 10);
+      labels = Array.from(
+        { length: daysInMonth(year, month) },
+        (_, i) => i + 1
+      );
+      dataCounts = labels.reduce((acc, date) => {
+        acc[date] = 0;
+        return acc;
+      }, {});
+      filteredData.forEach((item) => {
+        if (dataCounts.hasOwnProperty(item.date)) {
+          dataCounts[item.date] += 1;
         }
-      } else {
-        if (!emptyFields.includes("location_id")) {
-          const locationId = filterData.location_id;
-          if (!userData.locationIDsParsed.includes(locationId)) {
-            alert("Invalid location_id. Please select a valid location.");
-            return; // Exit the function to prevent further processing
-          }
-        }
-
-        // Check if "device_id" is not empty and validate it
-        if (!emptyFields.includes("device_id")) {
-          const deviceId = filterData.device_id;
-          if (!userData.deviceIDsParsed.includes(deviceId)) {
-            alert("Invalid device_id. Please select a valid device.");
-            return; // Exit the function to prevent further processing
-          }
-        }
-      }
+      });
     }
-    countRecordsByYear(userData, filterData);
+
+    // Create the chart
+    createChart(labels, dataCounts);
   } catch (error) {
     console.error("Error in dataProcessing:", error);
   }
 }
 
-var flag = "null";
-async function countRecordsByYear(userData, filterData) {
-  if (!filterData.year && !filterData.month) {
-    flag = "year";
-    const yearCounts = {};
-
-    // Iterate through the transData array
-    for (const record of userData.transData) {
-      // Check if the record has both device_id and year
-      if (record.Device_ID == filterData.device_id) {
-        const year = record.year.toString(); // Convert year to string for consistency
-
-        // Initialize or increment the count for the year
-        if (!yearCounts[year]) {
-          yearCounts[year] = 1;
-        } else {
-          yearCounts[year]++;
-        }
-      }
-    }
-    updateChart(yearCounts);
-  } else if (filterData.year && !filterData.month) {
-    flag = "month";
-    const monthCounts = {};
-
-    // Iterate through the trAansData array
-    for (const record of userData.transData) {
-      // Check if the record has both device_id and year matching filterData
-      if (
-        record.Device_ID == filterData.device_id &&
-        record.year == parseInt(filterData.year)
-      ) {
-        const month = record.month.toString(); // Convert month to string for consistency
-
-        // Initialize or increment the count for the month
-        if (!monthCounts[month]) {
-          monthCounts[month] = 1;
-        } else {
-          monthCounts[month]++;
-        }
-      }
-    }
-    updateChart(monthCounts);
-  } else if (filterData.year && filterData.month) {
-    flag = "date";
-    const dateCounts = {};
-    // Iterate through the transData array
-    for (const record of userData.transData) {
-      // Check if the record matches all filterData criteria and if record.date is a valid number
-      if (
-        record.Device_ID == filterData.device_id &&
-        record.year == parseInt(filterData.year) &&
-        record.month == parseInt(filterData.month) &&
-        isNumber(record.date)
-      ) {
-        // Convert the date to a string for consistency
-        const date = record.date.toString();
-
-        // Initialize or increment the count for the date
-        if (!dateCounts[date]) {
-          dateCounts[date] = 1;
-        } else {
-          dateCounts[date]++;
-        }
-      }
-    }
-    updateChart(dateCounts, filterData);
-  }
-  return null; // Return the result (it can be an object or null)
+// Count records based on given field
+function countRecords(labels, filteredData, field) {
+  let dataCounts = {};
+  labels.forEach((label) => {
+    let count = filteredData.filter((item) => item[field] === label).length;
+    dataCounts[label] = count;
+  });
+  return dataCounts;
 }
 
-function updateChart(counts, filterData) {
-  const keys = Object.keys(counts); // Get the keys
-  var data = Object.values(counts);
-  var labels = [];
-  var xAxisLable;
-  if (flag == "year") {
-    const maxYear = Math.max(...keys);
-    const minYear = Math.min(...keys);
-    xAxisLable = "Years";
-    // Add the previous and next years to the array
-    labels = Array.from(
-      { length: maxYear - minYear + 3 },
-      (_, index) => minYear - 1 + index
-    );
-    data = labels.map((year) => (counts[year] ? counts[year] : 0));
-  } else if (flag == "month") {
-    xAxisLable = "Months";
-    const monthLabels = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
+// Create chart using Chart.js
+function createChart(labels, dataCounts) {
+  const ctx = document.getElementById("myChart").getContext("2d");
 
-    // Create an array with counts for each month
-    const monthCounts = Array.from({ length: 12 }, (_, index) =>
-      counts[index + 1] ? counts[index + 1] : 0
-    );
-
-    // Assign the month labels and counts to labels and data
-    labels = monthLabels;
-    data = monthCounts;
-  } else if (flag == "date") {
-    xAxisLable = "Date";
-    const selectedMonth = parseInt(filterData.month);
-    // Determine the number of days in the selected month
-    const daysInMonth = new Date(
-      parseInt(filterData.year),
-      selectedMonth,
-      0
-    ).getDate();
-
-    // Create labels ranging from 1 to the number of days in the month
-    labels = Array.from({ length: daysInMonth }, (_, index) => index + 1);
-    data = labels.map((year) => (counts[year] ? counts[year] : 0));
-  }
-  createChart(labels, data, xAxisLable);
-}
-
-let myChart = null;
-function createChart(labels, data, xAxisLable) {
-  // Destroy the existing chart if it exists
+  // Destroy previous chart instance if exists
   if (myChart) {
     myChart.destroy();
   }
 
-  const ctx = document.getElementById("myChart").getContext("2d");
+  // Find the maximum intersection value in your dataCounts
+  const maxIntersection = Math.max(...Object.values(dataCounts));
 
-  const chartData = {
-    labels: labels,
-    datasets: [
-      {
-        label: "Fliter",
-        data: data,
-        fill: false,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.3,
-      },
-    ],
-  };
+  // Calculate the maximum Y-axis value and the step size (gap)
+  let maxYValue, stepSize;
+  if (maxIntersection <= 10) {
+    maxYValue = 10;
+    stepSize = 1;
+  } else {
+    maxYValue = Math.ceil(maxIntersection / 10) * 10;
+    stepSize = maxYValue / 10;
+  }
 
-  const chartOptions = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 10, // Set the Y-axis max value to 10
-        ticks: {
-          font: {
-            size: 16, // Set the font size to 20px for the Y-axis ticks
-            weight: "bold", // Make the font bold
-          },
-        },
-        title: {
-          display: true,
-          text: "Visitors", // Set the Y-axis label to 'Visitors'
-          font: {
-            size: 16, // Set the font size for the label
-            weight: "bold", // Make the label bold
-          },
-        },
-      },
-      x: {
-        ticks: {
-          font: {
-            size: 16, // Set the font size to 20px for the X-axis ticks
-            weight: "bold", // Make the font bold
-          },
-        },
-        title: {
-          display: true,
-          text: xAxisLable, // Set the X-axis label to 'Anything'
-          font: {
-            size: 16, // Set the font size for the label
-            weight: "bold", // Make the label bold
-          },
-        },
-      },
-    },
-    plugins: {
-      legend: {
-        labels: {
-          font: {
-            size: 16, // Set the font size to 20px for the legend labels
-            weight: "bold", // Make the font bold
-          },
-        },
-      },
-    },
-  };
-
-  // Create the new chart
   myChart = new Chart(ctx, {
     type: "line",
-    data: chartData,
-    options: chartOptions,
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Number of Records",
+          data: Object.values(dataCounts),
+          backgroundColor: "rgba(75, 192, 192, 0.5)",
+          borderColor: "rgba(75, 192, 192, 1)",
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: maxYValue,
+          stepSize: stepSize,
+        },
+      },
+    },
   });
-
-  ctx.canvas.style.border = "1px solid #324960";
-
-  const chartSection = document.getElementById("chartSection");
-  if (chartSection) {
-    chartSection.scrollIntoView({ behavior: "smooth" }); // Smooth scrolling
-  }
 }
-
-//Helper Function
-function isNumber(value) {
-  return !isNaN(parseFloat(value)) && isFinite(value);
-}
-
