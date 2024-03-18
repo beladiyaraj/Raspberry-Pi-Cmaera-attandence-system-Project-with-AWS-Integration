@@ -97,7 +97,7 @@ def capture_photos(channel):
     for camera_usb_port, camera_name in camera_usb_ports.items():
         take_photo(camera_name)
         # Wait for 3 seconds before capturing from the next camera
-        time.sleep(3)
+        time.sleep(5)
 
     batch_counter += 1
     save_batch_counter()  # Save the updated batch_counter immediately after increment
