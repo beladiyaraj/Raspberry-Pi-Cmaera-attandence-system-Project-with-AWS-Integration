@@ -116,7 +116,7 @@ def detect_and_crop_face(bucket_name, image_key):
         logger.error(f"An error occurred in detect_and_crop_face: {str(e)}")
         return b''
 
-def update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket_name, file_name, year, month, date, hours, minutes, seconds):
+def update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket_name, file_name,date, entry_time):
     """
     Updates or inserts a record in the database based on the detected information from images.
 
@@ -127,15 +127,11 @@ def update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket
     :param camera_number: Identifies the camera that captured the image.
     :param bucket_name: The name of the S3 bucket containing the images.
     :param file_name: The file name of the image in the S3 bucket.
-    :param year: Year component of the image capture timestamp.
-    :param month: Month component of the image capture timestamp.
-    :param date: Date component of the image capture timestamp.
-    :param hours: Hours component of the image capture timestamp.
-    :param minutes: Minutes component of the image capture timestamp.
-    :param seconds: Seconds component of the image capture timestamp.
+    :param date: date of the day when the was image captured
+    :param hours: entry time of the visitor.
     """
     # Convert year, month, and date to integers and compute the day of the week for the given date
-    computed_day = datetime(int(year), int(month), int(date)).strftime('%A')
+    computed_day = datetime.strptime(date, '%Y-%m-%d').strftime('%A')
 
     # Start database update or insertion process
     logger.info("Starting update_or_insert_db")
@@ -163,23 +159,31 @@ def update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket
             logger.info(f"No existing entry found for batch_id: {batch_id}. Creating a new one.")
 
             # Default values for fields, to be filled based on camera_number
-            visitor_ID_Details = None
+            visitor_id_details = None
             visitor_image_thumbnail = None
             vehicle_no = None
 
             # Populate the specific field based on the camera number
             if camera_number == '1':
-                visitor_ID_Details = detect_photo_id_text(bucket_name, file_name)
+                visitor_id_details = detect_photo_id_text(bucket_name, file_name)
             elif camera_number == '2':
                 visitor_image_thumbnail = detect_and_crop_face(bucket_name, file_name)
             elif camera_number == '3':
                 vehicle_no = detect_number_plate(bucket_name, file_name)
                 
-            # SQL query to insert a new record
-            sql = """INSERT INTO trans (device_id, batch_id, visitor_ID_Details, visitor_image_thumbnail, vehicle_no, year, month, date, day, hours, minutes, seconds)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-            cursor.execute(sql, (device_id, batch_id, visitor_ID_Details, visitor_image_thumbnail, vehicle_no, year, month, date, computed_day, hours, minutes, seconds))
-        
+            # SQL query to insert a new record without the first four variables and duplicate handling
+        sql = """
+        INSERT INTO trans 
+            (device_id, batch_id, date, day, entry_time, visitor_id_details, vehicle_no, visitor_image_thumbnail) 
+        VALUES 
+            (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        # Preparing the values for SQL command execution
+        values = (device_id, batch_id, date, computed_day, entry_time, visitor_id_details, vehicle_no, visitor_image_thumbnail)
+
+        cursor.execute(sql, values)
+                
         # Commit the transaction to make changes persistent
         conn.commit()
         logger.info("Database operation completed successfully.")
@@ -187,7 +191,7 @@ def update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket
         # Log any errors that occur during the database operation
         logger.error(f"An error occurred during database operation: {str(e)}")
 
-def lambda_handler(event, context):
+def lambda_handler(event):
     """
     AWS Lambda function handler to process images uploaded to an S3 bucket.
 
@@ -217,8 +221,8 @@ def lambda_handler(event, context):
     # If the file name format is valid, extract components from the file name
     if match:
         device_id, batch_id, camera_number, year, month, date, hours, minutes, seconds = match.groups()
-        # Ensure device_id is properly formatted
-        device_id = device_id.zfill(6)
+        date=year+"-"+month+"-"+date
+        entry_time=hours+":"+minutes+":"+seconds
 
     # Establish a connection to the MySQL database
     conn = mysql.connector.connect(
@@ -232,7 +236,7 @@ def lambda_handler(event, context):
         # Create a cursor for executing database queries
         cursor = conn.cursor(dictionary=True)
         # Perform the database update or insertion based on the detected information
-        update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket_name, file_name, year, month, date, hours, minutes, seconds)
+        update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket_name, file_name,date, entry_time)
         
     except Exception as e:
         # Log any errors encountered when interacting with the database
