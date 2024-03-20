@@ -116,41 +116,51 @@ def detect_and_crop_face(bucket_name, image_key):
         logger.error(f"An error occurred in detect_and_crop_face: {str(e)}")
         return b''
 
-# Add the new logic to process the exit using camera 1 photos
-def process_exit(cursor, device_id, extracted_text, exit_time):
-    logger.info("Processing exit workflow...")
-    # Extract the name from the newly taken photo's text
-    name_match = re.search(r"Name: (.+)", extracted_text)
+def normalize_text(text):
+    """Normalize text by removing non-alphanumeric characters and converting to uppercase."""
+    return re.sub(r'\W+', '', text).upper()
+
+def extract_name_details(text):
+    """Extract name details from the given text after 'Name' keyword."""
+    name_match = re.search(r"Name:?[\s-]*(\w+)", text, re.IGNORECASE)
     if name_match:
-        new_name_details = name_match.group(1)[:15]  # Adjust the length as needed
+        # Extract the name and normalize it
+        name_details = name_match.group(1)
+        return normalize_text(name_details)
+    return None
+
+def process_exit(conn,cursor, device_id, extracted_text, exit_time):
+    logger.info("Processing exit workflow...")
+    new_name_details = extract_name_details(extracted_text)
+    
+    if new_name_details:
         logger.info(f"Extracted Name for comparison: {new_name_details}")
 
-        # Query for eligible rows that need an exit time update
         cursor.execute("""
-            SELECT id, visitor_id_details 
-            FROM trans 
+            SELECT batch_id, visitor_id_details
+            FROM trans
             WHERE device_id = %s AND exit_time IS NULL
         """, (device_id,))
         logger.info(f"Searching for matching records with device_id={device_id} and NULL exit time...")
 
         for row in cursor.fetchall():
-            existing_name_match = re.search(r"Name: (.+)", row['visitor_id_details'])
-            if existing_name_match:
-                existing_name_details = existing_name_match.group(1)[:15]  # Adjust the length as needed
-                logger.info(f"Comparing with existing record Name: {existing_name_details}")
-                if new_name_details == existing_name_details:
-                    logger.info(f"Name match found. Updating exit time for id={row['id']}")
-                    cursor.execute("""
-                        UPDATE trans 
-                        SET exit_time = %s 
-                        WHERE id = %s
-                    """, (exit_time, row['id']))
-                    return True
-                else:
-                    logger.info("Name match not found.")
-    else:
-        logger.warning("No 'Name:' found in the extracted text for exit processing.")
+            existing_name_details = extract_name_details(row['visitor_id_details'])
+            if existing_name_details and new_name_details[:10] == existing_name_details[:10]:
+                logger.info(f"Name match found. Updating exit time for batch_id={row['batch_id']} and the exit time is:{exit_time}")
+                # Assuming exit_time is a string in 'HH:MM:SS' format and both device_id and batch_id are integers
+                cursor.execute("""
+                    UPDATE trans
+                    SET exit_time = %s
+                    WHERE device_id = %s AND batch_id = %s
+                """, (exit_time, device_id, row['batch_id']))
+                # Make sure to commit if this part of the code doesn't raise exceptions
+                conn.commit()
+                return True
+            else:
+                logger.info("No matching name found or name comparison mismatch.")
 
+    else:
+        logger.warning("No 'Name' found in the extracted text for exit processing.")
     logger.info("No matching record found for exit. Proceeding with usual workflow.")
     return False
 
@@ -273,7 +283,7 @@ def lambda_handler(event,context):
         if not extracted_text:
             logger.error("Failed to extract text for exit processing.")
         else:
-            if process_exit(cursor, device_id, extracted_text, exit_time):
+            if process_exit(conn,cursor, device_id, extracted_text, exit_time):
                 logger.info("Exit processed successfully.")
                 cursor.close()
                 conn.close()
