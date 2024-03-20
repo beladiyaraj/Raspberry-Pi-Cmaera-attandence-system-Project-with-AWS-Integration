@@ -116,82 +116,76 @@ def detect_and_crop_face(bucket_name, image_key):
         logger.error(f"An error occurred in detect_and_crop_face: {str(e)}")
         return b''
 
-def update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket_name, file_name,date, entry_time):
+def update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket_name, file_name, date, entry_time):
     """
     Updates or inserts a record in the database based on the detected information from images.
-
-    :param cursor: The MySQL cursor object for executing database queries.
-    :param conn: The MySQL connection object for database transactions.
-    :param device_id: The device identifier from which the images are captured.
-    :param batch_id: A unique identifier for the batch of images.
-    :param camera_number: Identifies the camera that captured the image.
-    :param bucket_name: The name of the S3 bucket containing the images.
-    :param file_name: The file name of the image in the S3 bucket.
-    :param date: date of the day when the was image captured
-    :param hours: entry time of the visitor.
+    Ensures that all records with the same batch_id have the same entry_time.
     """
     # Convert year, month, and date to integers and compute the day of the week for the given date
     computed_day = datetime.strptime(date, '%Y-%m-%d').strftime('%A')
 
-    # Start database update or insertion process
     logger.info("Starting update_or_insert_db")
     try:
         # Check if there is already an entry for this batch_id
-        cursor.execute("SELECT * FROM trans WHERE batch_id = %s", (batch_id,))
+        cursor.execute("SELECT entry_time FROM trans WHERE batch_id = %s", (batch_id,))
         row = cursor.fetchone()
 
+        # If there's already an entry for this batch_id, use the entry_time from that record
         if row:
-            # If an entry exists, update the specific field based on camera_number
-            if camera_number == '1':
-                # Camera 1 captures visitor ID details
+            entry_time = row['entry_time']  # This sets entry_time to the first recorded entry_time for this batch_id
+
+        # Execute the appropriate action based on camera_number
+        if camera_number == '1':
+            # Camera 1 captures visitor ID details
+            visitor_id_details = detect_photo_id_text(bucket_name, file_name)
+            if row:
+                # Update existing record
                 sql = "UPDATE trans SET visitor_ID_Details = %s WHERE batch_id = %s"
-                cursor.execute(sql, (detect_photo_id_text(bucket_name, file_name), batch_id))
-            elif camera_number == '2':
-                # Camera 2 captures visitor image thumbnails
+                cursor.execute(sql, (visitor_id_details, batch_id))
+            else:
+                # Insert new record
+                insert_new_record(cursor, device_id, batch_id, date, computed_day, entry_time, visitor_id_details, None, None)
+        elif camera_number == '2':
+            # Camera 2 captures visitor image thumbnails
+            visitor_image_thumbnail = detect_and_crop_face(bucket_name, file_name)
+            if row:
+                # Update existing record
                 sql = "UPDATE trans SET visitor_image_thumbnail = %s WHERE batch_id = %s"
-                cursor.execute(sql, (detect_and_crop_face(bucket_name, file_name), batch_id))
-            elif camera_number == '3':
-                # Camera 3 captures vehicle numbers
+                cursor.execute(sql, (visitor_image_thumbnail, batch_id))
+            else:
+                # Insert new record
+                insert_new_record(cursor, device_id, batch_id, date, computed_day, entry_time, None, None, visitor_image_thumbnail)
+        elif camera_number == '3':
+            # Camera 3 captures vehicle numbers
+            vehicle_no = detect_number_plate(bucket_name, file_name)
+            if row:
+                # Update existing record
                 sql = "UPDATE trans SET vehicle_no = %s WHERE batch_id = %s"
-                cursor.execute(sql, (detect_number_plate(bucket_name, file_name), batch_id))
-        else:
-            # If no entry exists, create a new one with the detected details
-            logger.info(f"No existing entry found for batch_id: {batch_id}. Creating a new one.")
+                cursor.execute(sql, (vehicle_no, batch_id))
+            else:
+                # Insert new record
+                insert_new_record(cursor, device_id, batch_id, date, computed_day, entry_time, None, vehicle_no, None)
 
-            # Default values for fields, to be filled based on camera_number
-            visitor_id_details = None
-            visitor_image_thumbnail = None
-            vehicle_no = None
-
-            # Populate the specific field based on the camera number
-            if camera_number == '1':
-                visitor_id_details = detect_photo_id_text(bucket_name, file_name)
-            elif camera_number == '2':
-                visitor_image_thumbnail = detect_and_crop_face(bucket_name, file_name)
-            elif camera_number == '3':
-                vehicle_no = detect_number_plate(bucket_name, file_name)
-                
-            # SQL query to insert a new record without the first four variables and duplicate handling
-        sql = """
-        INSERT INTO trans 
-            (device_id, batch_id, date, day, entry_time, visitor_id_details, vehicle_no, visitor_image_thumbnail) 
-        VALUES 
-            (%s, %s, %s, %s, %s, %s, %s, %s)
-        """
-
-        # Preparing the values for SQL command execution
-        values = (device_id, batch_id, date, computed_day, entry_time, visitor_id_details, vehicle_no, visitor_image_thumbnail)
-
-        cursor.execute(sql, values)
-                
         # Commit the transaction to make changes persistent
         conn.commit()
         logger.info("Database operation completed successfully.")
     except Exception as e:
-        # Log any errors that occur during the database operation
         logger.error(f"An error occurred during database operation: {str(e)}")
+        conn.rollback()
 
-def lambda_handler(event):
+def insert_new_record(cursor, device_id, batch_id, date, day, entry_time, visitor_id_details, vehicle_no, visitor_image_thumbnail):
+    """
+    Inserts a new record into the database with the given details.
+    """
+    sql = """
+    INSERT INTO trans
+    (device_id, batch_id, date, day, entry_time, visitor_ID_Details, vehicle_no, visitor_image_thumbnail)
+    VALUES
+    (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.execute(sql, (device_id, batch_id, date, day, entry_time, visitor_id_details, vehicle_no, visitor_image_thumbnail))
+
+def lambda_handler(event,context):
     """
     AWS Lambda function handler to process images uploaded to an S3 bucket.
 
