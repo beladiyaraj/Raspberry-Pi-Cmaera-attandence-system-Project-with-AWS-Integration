@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-["Device_ID"].forEach((id) => {
+["device_id"].forEach((id) => {
   let seen = {};
   $(`select#${id} option`).each(function () {
     let val = $(this).val();

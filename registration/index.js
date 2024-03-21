@@ -24,7 +24,6 @@ app.use((req, res, next) => {
   if (req.originalUrl === "/") {
     res.set(
       "Cache-Control",
-      "no-store, no-cache, must-revalidate, private, max-age=0"
     );
   }
   next();
@@ -73,7 +72,7 @@ app.get("/admin", ensureAuthenticated, async (req, res) => {
     for (let i = 0; i < data.transData.length; i++) {
       for (let j = 0; j < data.location.length; j++) {
         if (
-          data.transData[i].Device_ID == JSON.parse(data.location[j].device_id)
+          data.transData[i].device_id == JSON.parse(data.location[j].device_id)
         ) {
           data.transData[i].project_name = data.location[j].project_name;
           data.transData[i].building_name = data.location[j].building_name;
@@ -372,7 +371,6 @@ async function getTransData(deviceIdArray) {
             "data:image/jpeg;base64," + base64Image;
         }
       });
-
       resolve(transResults);
     });
   });

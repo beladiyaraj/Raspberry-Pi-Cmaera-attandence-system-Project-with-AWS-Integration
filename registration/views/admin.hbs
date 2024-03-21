@@ -120,11 +120,33 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Batch_ID">Batch ID</label>
+          <label class="input-label" for="batch_id">Batch ID</label>
           <input
             type="text"
-            id="Batch_ID"
-            name="Batch_ID"
+            id="batch_id"
+            name="batch_id"
+            class="input-1"
+            onfocus="setFocus(true)"
+            onblur="setFocus(false)"
+          />
+        </div>
+        <div class="input-box filter-group">
+          <label class="input-label" for="date">Date</label>
+          <input
+            type="text"
+            id="date"
+            name="date"
+            class="input-1"
+            onfocus="setFocus(true)"
+            onblur="setFocus(false)"
+          />
+        </div>
+        <div class="input-box filter-group">
+          <label class="input-label" for="day">Day</label>
+          <input
+            type="text"
+            id="day"
+            name="day"
             class="input-1"
             onfocus="setFocus(true)"
             onblur="setFocus(false)"
@@ -132,103 +154,41 @@
         </div>
 
         <div class="input-box filter-group">
-          <label class="input-label" for="Year">Year</label>
+          <label class="input-label" for="entry_time">Entry Time</label>
           <input
             type="text"
-            id="Year"
-            name="Year"
+            id="entry_time"
+            name="entry_time"
+            class="input-1"
+            onfocus="setFocus(true)"
+            onblur="setFocus(false)"
+          />
+        </div>
+        <div class="input-box filter-group">
+          <label class="input-label" for="exit_time">Exit Time</label>
+          <input
+            type="text"
+            id="exit_time"
+            name="exit_time"
+            class="input-1"
+            onfocus="setFocus(true)"
+            onblur="setFocus(false)"
+          />
+        </div>
+        <div class="input-box filter-group">
+          <label class="input-label" for="visitor_details">Visitor Details</label>
+          <input
+            type="text"
+            id="visitor_details"
+            name="visitor_details"
             class="input-1"
             onfocus="setFocus(true)"
             onblur="setFocus(false)"
           />
         </div>
 
-        <div class="input-box filter-group">
-          <label class="input-label" for="Month">Month</label>
-          <input
-            type="text"
-            id="Month"
-            name="Month"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
-        </div>
-
-        <div class="input-box filter-group">
-          <label class="input-label" for="Date">Date</label>
-          <input
-            type="text"
-            id="Date"
-            name="Date"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
-        </div>
-
-        <div class="input-box filter-group">
-          <label class="input-label" for="Day">Day</label>
-          <input
-            type="text"
-            id="Day"
-            name="Day"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
-        </div>
-
-        <div class="input-box filter-group">
-          <label class="input-label" for="Hours">Hours</label>
-          <input
-            type="text"
-            id="Hours"
-            name="Hours"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
-        </div>
-
-        <div class="input-box filter-group">
-          <label class="input-label" for="Minutes">Minutes</label>
-          <input
-            type="text"
-            id="Minutes"
-            name="Minutes"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
-        </div>
-
-        <div class="input-box filter-group">
-          <label class="input-label" for="Seconds">Seconds</label>
-          <input
-            type="text"
-            id="Seconds"
-            name="Seconds"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
-        </div>
-
-        <div class="input-box filter-group">
-          <label class="input-label" for="Visitor_Details">Visitor Details</label>
-          <input
-            type="text"
-            id="Visitor_Details"
-            name="Visitor_Details"
-            class="input-1"
-            onfocus="setFocus(true)"
-            onblur="setFocus(false)"
-          />
-        </div>
-
-        <div class="input-box filter-group">
-          <label class="input-label" for="Vehicle_No">Vehicle No</label>
+        {{! <div class="input-box filter-group">
+          <label class="input-label" for="vehicle_No">Vehicle No</label>
           <input
             type="text"
             id="Vehicle_No"
@@ -237,7 +197,7 @@
             onfocus="setFocus(true)"
             onblur="setFocus(false)"
           />
-        </div>
+        </div> }}
         <span id="submitButtonStyle">
           <div class="filter-group">
             <button type="submit" class="btn btn-primary1">Filter</button>
@@ -260,15 +220,12 @@
               <th>Gate Name</th>
               <th>Device ID</th>
               <th>Batch ID</th>
-              <th>Year</th>
-              <th>Month</th>
               <th>Date</th>
               <th>Day</th>
-              <th>Hours</th>
-              <th>Minutes</th>
-              <th>Seconds</th>
+              <th>Entry Time</th>
+              <th>Exit Time</th>
               <th id="visitor_details_column">Visitor Details</th>
-              <th>Vehicle No</th>
+              {{! <th>Vehicle No</th> }}
               <th>Visitor Image</th>
             </tr>
           </thead>
@@ -279,17 +236,14 @@
                 <td>{{this.building_name}}</td>
                 <td>{{this.gate_no}}</td>
                 <td>{{this.gate_name}}</td>
-                <td>{{this.Device_ID}}</td>
+                <td>{{this.device_id}}</td>
                 <td>{{this.batch_id}}</td>
-                <td>{{this.year}}</td>
-                <td>{{this.month}}</td>
                 <td>{{this.date}}</td>
-                <td>{{this.day}}</td>
-                <td>{{this.hours}}</td>
-                <td>{{this.minutes}}</td>
-                <td>{{this.seconds}}</td>
+                <td>{{this.entry_time}}</td>
+                <td>{{this.exit_time}}</td>
+                <td>{{this.time}}</td>
                 <td class="visitor_details">{{this.visitor_ID_Details}}</td>
-                <td class="vehicle_no">{{this.vehicle_no}}</td>
+                {{!-- <td class="vehicle_no">{{this.vehicle_no}}</td> --}}
                 <td class="visitor_image">
                   {{#if this.visitor_image_thumbnail_data_url}}
                     <a
@@ -406,8 +360,8 @@
         </table>
       </div>
     </section>
-    {{!-- <script>
+    {{! <script>
 
-    </script> --}}
+    </script> }}
   </body>
 </html>
