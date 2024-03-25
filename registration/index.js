@@ -311,7 +311,7 @@ async function getAdminData(useremail) {
           ? JSON.parse(userData.device_id)
           : [];
         const transResults = await getTransData(deviceIdArray);
-
+        
         const locationIdArray = locationResults.location_ID
           ? JSON.parse(locationResults.location_ID)
           : [];
@@ -370,10 +370,22 @@ async function getTransData(deviceIdArray) {
           trans.visitor_image_thumbnail_data_url =
             "data:image/jpeg;base64," + base64Image;
         }
+        if(trans.date){
+          trans.date = formatDate(trans.date);
+        }
       });
       resolve(transResults);
     });
   });
+}
+
+// Function to format the date from ISO string to dd/mm/yyyy
+function formatDate(dateString) {
+  const dateObj = new Date(dateString);
+  const day = String(dateObj.getUTCDate()).padStart(2, '0');
+  const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+  const year = dateObj.getUTCFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 function ensureAuthenticated(req, res, next) {
