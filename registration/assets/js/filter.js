@@ -24,8 +24,8 @@ document.addEventListener("DOMContentLoaded", function () {
       .getElementById("entry_time")
       .value.toLowerCase();
     const exit_time = document.getElementById("exit_time").value.toLowerCase();
-    const visitor_details = document
-      .getElementById("visitor_details")
+    const visitor_id_details = document
+      .getElementById("visitor_id_details")
       .value.toLowerCase();
     // const vehicleNo = document.getElementById("Vehicle_No").value.toLowerCase();
     // Apply filters to table rows
@@ -39,13 +39,13 @@ document.addEventListener("DOMContentLoaded", function () {
         (gateNo === "" || cells[2].innerText.toLowerCase() === gateNo) &&
         (gateName === "" || cells[3].innerText.toLowerCase() === gateName) &&
         (batch_id === "" || cells[5].innerText.toLowerCase() === batch_id) &&
-        (date === "" || cells[8].innerText.toLowerCase() === date) &&
-        (day === "" || cells[9].innerText.toLowerCase() === day) &&
+        (date === "" || cells[6].innerText.toLowerCase() === date) &&
+        (day === "" || cells[7].innerText.toLowerCase() === day) &&
         (entry_time === "" ||
-          cells[10].innerText.toLowerCase() === entry_time) &&
-        (exit_time === "" || cells[10].innerText.toLowerCase() === exit_time) &&
-        (visitor_details === "" ||
-          cells[13].innerText.toLowerCase().includes(visitor_details))
+          cells[8].innerText.toLowerCase() === entry_time) &&
+        (exit_time === "" || cells[9].innerText.toLowerCase() === exit_time) &&
+        (visitor_id_details === "" ||
+          cells[10].innerText.toLowerCase().includes(visitor_id_details))
         // (vehicleNo === "" || cells[14].innerText.toLowerCase() === vehicleNo)
       ) {
         console.log(cells);
