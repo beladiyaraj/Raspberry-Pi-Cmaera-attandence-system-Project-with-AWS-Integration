@@ -129,10 +129,10 @@ def extract_name_details(text):
         return normalize_text(name_details)
     return None
 
-def process_exit(conn,cursor, device_id, extracted_text, exit_time):
-    logger.info("Processing exit workflow...")
+def process_exit(conn, cursor, device_id, extracted_text, exit_time):
+    # Assuming extracted_text handling is correct and focusing on visitor_id_details being None...
     new_name_details = extract_name_details(extracted_text)
-    
+
     if new_name_details:
         logger.info(f"Extracted Name for comparison: {new_name_details}")
 
@@ -144,25 +144,26 @@ def process_exit(conn,cursor, device_id, extracted_text, exit_time):
         logger.info(f"Searching for matching records with device_id={device_id} and NULL exit time...")
 
         for row in cursor.fetchall():
-            existing_name_details = extract_name_details(row['visitor_id_details'])
-            if existing_name_details and new_name_details[:10] == existing_name_details[:10]:
-                logger.info(f"Name match found. Updating exit time for batch_id={row['batch_id']} and the exit time is:{exit_time}")
-                # Assuming exit_time is a string in 'HH:MM:SS' format and both device_id and batch_id are integers
-                cursor.execute("""
-                    UPDATE trans
-                    SET exit_time = %s
-                    WHERE device_id = %s AND batch_id = %s
-                """, (exit_time, device_id, row['batch_id']))
-                # Make sure to commit if this part of the code doesn't raise exceptions
-                conn.commit()
-                return True
+            if row['visitor_id_details']:
+                existing_name_details = extract_name_details(row['visitor_id_details'])
+                if existing_name_details and new_name_details[:10] == existing_name_details[:10]:
+                    logger.info(f"Name match found. Updating exit time for batch_id={row['batch_id']} and the exit time is:{exit_time}")
+                    cursor.execute("""
+                        UPDATE trans
+                        SET exit_time = %s
+                        WHERE device_id = %s AND batch_id = %s
+                    """, (exit_time, device_id, row['batch_id']))
+                    conn.commit()
+                    return True
             else:
-                logger.info("No matching name found or name comparison mismatch.")
+                logger.info("Record has no visitor_id_details. Skipping comparison.")
 
     else:
         logger.warning("No 'Name' found in the extracted text for exit processing.")
+    
     logger.info("No matching record found for exit. Proceeding with usual workflow.")
     return False
+
 
 def update_or_insert_db(cursor, conn, device_id, batch_id, camera_number, bucket_name, file_name, date, entry_time):
     """
