@@ -1,15 +1,17 @@
-from gpiozero import Button
+import RPi.GPIO as GPIO
 import time
 import os
 import boto3
 import datetime
 import logging
-from signal import pause
 
-
-button_pin = 18
+# GPIO Pin Setup
+button_pin = 27
 s3_bucket_name = 'raspberrypi4b-images'
 s3 = boto3.client('s3')
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Using pull-up resistor
 
 # Device ID
 device_id = "000111"
@@ -18,7 +20,7 @@ device_id = "000111"
 camera_usb_ports = {
     '/dev/video0': 'camera1',
     '/dev/video2': 'camera2',
-    # '/dev/video4': 'camera3'
+   # '/dev/video4': 'camera3'
 }
 
 # Configure logging
@@ -28,9 +30,11 @@ logging.basicConfig(filename='/home/rahultanwar/PythonFiles/camera_log.txt', lev
 # Flag to control capture within debounce period
 is_capturing = False
 
-def save_batch_counter(batch_counter):
+
+def save_batch_counter():
     with open('/home/rahultanwar/PythonFiles/batch_counter.txt', 'w') as file:
         file.write(str(batch_counter))
+
 
 def load_batch_counter():
     try:
@@ -39,10 +43,13 @@ def load_batch_counter():
     except FileNotFoundError:
         return 1
 
+
 # Initialize the batch counter by loading from file
 batch_counter = load_batch_counter()
 
-def take_photo(camera_name, batch_counter):
+
+def take_photo(camera_name):
+    global batch_counter
     now = datetime.datetime.now()
     timestamp_formatted = now.strftime("%Y_%m_%d_%H_%M_%S")
 
@@ -51,7 +58,8 @@ def take_photo(camera_name, batch_counter):
 
     image_path = f"/home/rahultanwar/PythonFiles/{device_id}batch{batch_counter}{camera_name}_{timestamp_formatted}.jpeg"
 
-    camera_usb_port = [usb_port for usb_port, name in camera_usb_ports.items() if name == camera_name]
+    camera_usb_port = [usb_port for usb_port,
+                       name in camera_usb_ports.items() if name == camera_name]
     if not camera_usb_port:
         logging.error(f"Camera {camera_name} not found in the USB ports.")
         return
@@ -73,37 +81,42 @@ def take_photo(camera_name, batch_counter):
 
     logging.info(f"Photo captured and uploaded to S3: {image_path}")
 
+
 def capture_photos():
     global batch_counter, is_capturing
 
+    logging.info(f"Button pressed detected. is_capturing: {is_capturing}")
+
     if is_capturing:
-        logging.info("Capture already in progress. Ignoring this button press.")
+        logging.info(
+            "Capture already in progress. Ignoring this button press.")
         return
 
     logging.info("Starting photo capture process.")
     is_capturing = True
 
     for camera_usb_port, camera_name in camera_usb_ports.items():
-        take_photo(camera_name, batch_counter)
+        take_photo(camera_name)
         # Wait for 3 seconds before capturing from the next camera
-        time.sleep(3)
+        time.sleep(5)
 
     batch_counter += 1
-    save_batch_counter(batch_counter)  # Save the updated batch_counter immediately after increment
-    logging.info(f"Photo capture completed for batch {batch_counter}. Incrementing batch_counter.")
+    save_batch_counter()  # Save the updated batch_counter immediately after increment
+    logging.info(
+        f"Photo capture completed for batch {batch_counter}. Incrementing batch_counter.")
 
     # Delay to ensure no re-triggering happens immediately
     time.sleep(1)  # You may adjust this based on your observation
     is_capturing = False
-    logging.info("Reset is_capturing flag and ready for the next button press.")
-
-# Setup button with gpiozero
-button = Button(button_pin)
-
-# Assign the callback for button press
-button.when_pressed = capture_photos
+    logging.info(
+        "Reset is_capturing flag and ready for the next button press.")
 
 try:
-    pause()  # Use pause() to keep the script running
+    while True:
+        button_state = GPIO.input(button_pin)
+        if button_state == False:  # Button is pressed
+            capture_photos()  # Call the function to handle photo capture
+            time.sleep(0.5)  # Debounce delay; adjust as necessary
+        time.sleep(0.1)  # Short delay to reduce CPU usage
 except KeyboardInterrupt:
-    pass  # Clean exit on Ctrl+C
+    GPIO.cleanup()  # Clean up GPIO settings
